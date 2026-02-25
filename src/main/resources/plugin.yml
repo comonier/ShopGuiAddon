@@ -4,9 +4,11 @@ main: com.comonier.shopguiaddon.ShopGuiAddon
 api-version: '1.21'
 author: Comonier
 depend: [ShopGUIPlus]
-description: Addon avançado para ShopGUI+ com suporte a Skins, Lore e Edição Visual.
+description: Advanced ShopGUI+ addon with visual editing, skin support, and menu management.
 commands:
   sga:
-    description: Comando principal do ShopGuiAddon.
-    usage: /sga [help|edit|itemadd|reload|shopcreate|link|replace|menu|item]
+    description: Main command for ShopGuiAddon.
+    # Updated usage list including shopremove
+    usage: /sga [help|edit|itemadd|itemremove|reload|shopcreate|shopremove|link|replace|unlink|menu|item]
     permission: shopguiaddon.admin
+    permission-message: "&cYou do not have permission to use this command!"

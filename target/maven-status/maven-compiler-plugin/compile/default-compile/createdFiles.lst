@@ -1,4 +1,5 @@
 com\comonier\shopguiaddon\GuiManager.class
+com\comonier\shopguiaddon\TabCompleter.class
 com\comonier\shopguiaddon\CommandHandler.class
 com\comonier\shopguiaddon\ShopGuiAddon.class
 com\comonier\shopguiaddon\EventListener.class

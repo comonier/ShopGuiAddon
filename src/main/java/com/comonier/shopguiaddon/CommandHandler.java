@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,65 +35,134 @@ public class CommandHandler implements CommandExecutor {
 
         String sub = args[0].toLowerCase();
 
-        // --- 1. HELP ---
         if (sub.equals("help")) {
             sendHelp(player);
             return true;
         }
 
-        // --- 2. RELOAD ---
         if (sub.equals("reload")) {
             ShopGuiAddon.getInstance().reloadConfig();
+            updateTabCache();
             player.sendMessage(ChatUtils.getMessage("reload_success"));
             return true;
         }
 
-        // --- 3. EDIT (GUI VISUAL) ---
         else if (sub.equals("edit")) {
-            if (3 > args.length) { player.sendMessage("§cUso: /sga edit <loja> <slot>"); return true; }
-            try { GuiManager.openEditor(player, args[1], Integer.parseInt(args[2])); } catch (Exception e) { player.sendMessage("§cErro no slot!"); }
+            if (3 > args.length) { player.sendMessage("§cUsage: /sga edit [shop] [slot]"); return true; }
+            try { GuiManager.openEditor(player, args[1], Integer.parseInt(args[2])); } catch (Exception e) { player.sendMessage("§cError in slot!"); }
             return true;
         }
 
-        // --- 4. ITEMADD (ADICIONAR ITEM DA MAO) ---
         else if (sub.equals("itemadd")) {
-            if (5 > args.length) { player.sendMessage("§cUso: /sga itemadd <loja> <slot> <compra> <venda>"); return true; }
-            ItemStack item = player.getInventory().getItemInMainHand();
-            if (null == item || Material.AIR == item.getType()) { player.sendMessage("§cSegure um item!"); return true; }
-            try {
-                String shopId = args[1];
-                int slotId = Integer.parseInt(args[2]);
-                double buy = Double.parseDouble(args[3]);
-                double sell = Double.parseDouble(args[4]);
-                File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
-                if (false == f.exists()) { player.sendMessage("§cLoja nao encontrada!"); return true; }
-                FileConfiguration cfg = YamlConfiguration.loadConfiguration(f);
-                String root = cfg.contains(shopId + ".items") ? shopId + ".items" : "items";
-                ConfigurationSection sec = cfg.getConfigurationSection(root);
-                if (null != sec) {
-                    for (String k : sec.getKeys(false)) {
-                        if (cfg.getInt(root + "." + k + ".slot") == slotId) { cfg.set(root + "." + k, null); break; }
-                    }
-                }
-                String key = item.getType().name().toLowerCase() + "_" + System.currentTimeMillis();
-                cfg.set(root + "." + key + ".type", "item");
-                cfg.set(root + "." + key + ".item.material", item.getType().name());
-                cfg.set(root + "." + key + ".slot", slotId);
-                cfg.set(root + "." + key + ".buyPrice", buy);
-                cfg.set(root + "." + key + ".sellPrice", sell);
-                cfg.save(f);
-                player.performCommand("shopgui reload");
-                player.sendMessage("§aItem adicionado a " + shopId);
-            } catch (Exception e) { player.sendMessage("§cErro no itemadd!"); }
+            if (5 > args.length) { player.sendMessage("§cUsage: /sga itemadd [shop] [slot] [buy] [sell]"); return true; }
+            handleItemAdd(player, args);
             return true;
         }
 
-        // --- 5. SHOPCREATE ---
+        else if (sub.equals("itemremove")) {
+            if (3 > args.length) { player.sendMessage("§cUsage: /sga itemremove [shop] [slot]"); return true; }
+            handleItemRemove(player, args[1], args[2]);
+            return true;
+        }
+
         else if (sub.equals("shopcreate")) {
-            if (2 > args.length) { player.sendMessage("§cUso: /sga shopcreate <nome>"); return true; }
-            String id = args[1].toLowerCase();
+            if (2 > args.length) { player.sendMessage("§cUsage: /sga shopcreate [name]"); return true; }
+            handleShopCreate(player, args[1].toLowerCase());
+            return true;
+        }
+
+        // NOVO COMANDO: SHOPREMOVE
+        else if (sub.equals("shopremove")) {
+            if (2 > args.length) { player.sendMessage("§cUsage: /sga shopremove [name]"); return true; }
+            handleShopRemove(player, args[1].toLowerCase());
+            return true;
+        }
+
+        else if (sub.equals("link") || sub.equals("replace")) {
+            if (4 > args.length) { player.sendMessage("§cUsage: /sga " + sub + " [shop] [slot] [mat] [skin]"); return true; }
+            handleMenuLink(player, args, sub.equals("replace"));
+            return true;
+        }
+
+        else if (sub.equals("unlink")) {
+            if (2 > args.length) { player.sendMessage("§cUsage: /sga unlink [slot]"); return true; }
+            handleMenuUnlink(player, args[1]);
+            return true;
+        }
+
+        else if (sub.equals("menu")) {
+            if (4 > args.length) { player.sendMessage("§cUsage: /sga menu [slot] [name|lore] [text]"); return true; }
+            handleMenuEdit(player, args);
+            return true;
+        }
+
+        else if (sub.equals("item")) {
+            if (5 > args.length) { player.sendMessage("§cUsage: /sga item [shop] [slot] [name|lore] [text]"); return true; }
+            handleItemEdit(player, args);
+            return true;
+        }
+
+        sendHelp(player);
+        return true;
+    }
+
+    private void handleItemAdd(Player p, String[] args) {
+        try {
+            String shopId = args[1];
+            int slotId = Integer.parseInt(args[2]);
+            double buy = Double.parseDouble(args[3]);
+            double sell = Double.parseDouble(args[4]);
+            ItemStack item = p.getInventory().getItemInMainHand();
+            if (null == item || Material.AIR == item.getType()) { p.sendMessage("§cHold an item!"); return; }
+            File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
+            if (false == f.exists()) { p.sendMessage("§cShop not found!"); return; }
+            FileConfiguration cfg = YamlConfiguration.loadConfiguration(f);
+            String root = cfg.contains(shopId + ".items") ? shopId + ".items" : "items";
+            ConfigurationSection sec = cfg.getConfigurationSection(root);
+            if (null != sec) {
+                for (String k : sec.getKeys(false)) {
+                    if (cfg.getInt(root + "." + k + ".slot") == slotId) { cfg.set(root + "." + k, null); break; }
+                }
+            }
+            String key = item.getType().name().toLowerCase() + "_" + System.currentTimeMillis();
+            cfg.set(root + "." + key + ".type", "item");
+            cfg.set(root + "." + key + ".item.material", item.getType().name());
+            cfg.set(root + "." + key + ".slot", slotId);
+            cfg.set(root + "." + key + ".buyPrice", buy);
+            cfg.set(root + "." + key + ".sellPrice", sell);
+            cfg.save(f);
+            p.performCommand("shopgui reload");
+            p.sendMessage("§aItem added to " + shopId);
+        } catch (Exception e) { p.sendMessage("§cError in itemadd!"); }
+    }
+
+    private void handleItemRemove(Player p, String shopId, String slotStr) {
+        try {
+            int targetSlot = Integer.parseInt(slotStr);
+            File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
+            if (false == f.exists()) { p.sendMessage("§cShop not found!"); return; }
+            FileConfiguration cfg = YamlConfiguration.loadConfiguration(f);
+            String root = cfg.contains(shopId + ".items") ? shopId + ".items" : "items";
+            ConfigurationSection sec = cfg.getConfigurationSection(root);
+            if (null != sec) {
+                String keyToRemove = null;
+                for (String k : sec.getKeys(false)) {
+                    if (cfg.getInt(root + "." + k + ".slot") == targetSlot) { keyToRemove = k; break; }
+                }
+                if (null != keyToRemove) {
+                    cfg.set(root + "." + keyToRemove, null);
+                    cfg.save(f);
+                    p.performCommand("shopgui reload");
+                    p.sendMessage("§aItem removed from " + shopId + " slot " + targetSlot);
+                } else { p.sendMessage("§cSlot is empty."); }
+            }
+        } catch (Exception e) { p.sendMessage("§cError removing item."); }
+    }
+
+    private void handleShopCreate(Player p, String id) {
+        try {
             File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), id + ".yml");
-            if (f.exists()) { player.sendMessage("§cJa existe!"); return true; }
+            if (f.exists()) { p.sendMessage("§cAlready exists!"); return; }
             FileConfiguration cfg = new YamlConfiguration();
             cfg.set(id + ".name", "&bShop " + id);
             cfg.set(id + ".size", 54);
@@ -101,33 +171,23 @@ public class CommandHandler implements CommandExecutor {
             cfg.set(id + ".items.1.slot", 10);
             cfg.set(id + ".items.1.buyPrice", 10.0);
             cfg.set(id + ".items.1.sellPrice", 5.0);
-            try { cfg.save(f); player.performCommand("shopgui reload"); player.sendMessage("§aLoja criada!"); } catch (IOException e) { e.printStackTrace(); }
-            return true;
-        }
+            cfg.save(f);
+            updateTabCache();
+            p.performCommand("shopgui reload");
+            p.sendMessage("§aShop created!");
+        } catch (Exception e) { p.sendMessage("§cError creating shop."); }
+    }
 
-        // --- 6. LINK & REPLACE (MENU PRINCIPAL) ---
-        else if (sub.equals("link") || sub.equals("replace")) {
-            if (4 > args.length) { player.sendMessage("§cUso: /sga " + sub + " <loja> <slot> <material> [skin]"); return true; }
-            handleMenuLink(player, args, sub.equals("replace"));
-            return true;
-        }
-
-        // --- 7. MENU (EDITAR DISPLAY DO MENU PRINCIPAL) ---
-        else if (sub.equals("menu")) {
-            if (4 > args.length) { player.sendMessage("§cUso: /sga menu <slot> <name|lore> <texto;texto>"); return true; }
-            handleMenuEdit(player, args);
-            return true;
-        }
-
-        // --- 8. ITEM (EDITAR DISPLAY DE UM ITEM NA LOJA FISICA) ---
-        else if (sub.equals("item")) {
-            if (5 > args.length) { player.sendMessage("§cUso: /sga item <loja> <slot> <name|lore> <texto;texto>"); return true; }
-            handleItemEdit(player, args);
-            return true;
-        }
-
-        sendHelp(player);
-        return true;
+    // LOGICA DO SHOPREMOVE
+    private void handleShopRemove(Player p, String id) {
+        File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), id + ".yml");
+        if (f.exists()) {
+            if (f.delete()) {
+                updateTabCache();
+                p.performCommand("shopgui reload");
+                p.sendMessage("§aShop file " + id + ".yml deleted successfully!");
+            } else { p.sendMessage("§cFailed to delete file."); }
+        } else { p.sendMessage("§cShop file not found."); }
     }
 
     private void handleMenuLink(Player p, String[] args, boolean force) {
@@ -147,7 +207,7 @@ public class CommandHandler implements CommandExecutor {
                 }
             }
             if (null != oldKey) {
-                if (false == force) { p.sendMessage("§cSlot ocupado! Use /sga replace."); return; }
+                if (false == force) { p.sendMessage("§cSlot occupied! Use replace."); return; }
                 cfg.set(path + "." + oldKey, null);
             }
             int nextId = 1;
@@ -160,14 +220,36 @@ public class CommandHandler implements CommandExecutor {
             String pth = path + "." + finalKey;
             cfg.set(pth + ".item.material", mat);
             if (mat.equals("PLAYER_HEAD") && null != skin) cfg.set(pth + ".item.skin", skin);
-            cfg.set(pth + ".item.name", "&b&lLOJA: " + shopId.toUpperCase());
-            cfg.set(pth + ".item.lore", Arrays.asList("&7» Clique para abrir", "&7» Acesse: /shop " + shopId));
+            cfg.set(pth + ".item.name", "&b&lSHOP: " + shopId.toUpperCase());
+            cfg.set(pth + ".item.lore", Arrays.asList("&7» Click to open", "&7» Access: /shop " + shopId));
             cfg.set(pth + ".shop", shopId);
             cfg.set(pth + ".slot", slot);
             cfg.save(f);
             p.performCommand("shopgui reload");
-            p.sendMessage("§aVínculo no Menu Principal atualizado!");
-        } catch (Exception e) { p.sendMessage("§cErro no link/replace!"); }
+            p.sendMessage("§aMain Menu updated!");
+        } catch (Exception e) { p.sendMessage("§cError in menu link!"); }
+    }
+
+    private void handleMenuUnlink(Player p, String slotStr) {
+        try {
+            int targetSlot = Integer.parseInt(slotStr);
+            File f = new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "config.yml");
+            FileConfiguration cfg = YamlConfiguration.loadConfiguration(f);
+            String path = "shopMenuItems";
+            ConfigurationSection sec = cfg.getConfigurationSection(path);
+            if (null != sec) {
+                String keyToRemove = null;
+                for (String k : sec.getKeys(false)) {
+                    if (cfg.getInt(path + "." + k + ".slot") == targetSlot) { keyToRemove = k; break; }
+                }
+                if (null != keyToRemove) {
+                    cfg.set(path + "." + keyToRemove, null);
+                    cfg.save(f);
+                    p.performCommand("shopgui reload");
+                    p.sendMessage("§aUnlinked slot " + targetSlot);
+                } else { p.sendMessage("§cSlot not found in menu."); }
+            }
+        } catch (Exception e) { p.sendMessage("§cError in unlink."); }
     }
 
     private void handleMenuEdit(Player p, String[] args) {
@@ -183,16 +265,16 @@ public class CommandHandler implements CommandExecutor {
                     if (cfg.getInt("shopMenuItems." + k + ".slot") == slot) {
                         String pth = "shopMenuItems." + k + ".item." + type;
                         if (type.equals("lore")) cfg.set(pth, Arrays.asList(text.split(";")));
-                        else cfg.set(pth, text);
+                        else cfg.set(pth, ChatUtils.color(text));
                         cfg.save(f);
                         p.performCommand("shopgui reload");
-                        p.sendMessage("§aDisplay do Menu atualizado com sucesso!");
+                        p.sendMessage("§aMenu display updated!");
                         return;
                     }
                 }
             }
-            p.sendMessage("§cSlot nao encontrado no Menu Principal!");
-        } catch (Exception e) { p.sendMessage("§cErro no comando menu!"); }
+            p.sendMessage("§cNo item found at slot " + slot);
+        } catch (Exception e) { p.sendMessage("§cError in menu edit!"); }
     }
 
     private void handleItemEdit(Player p, String[] args) {
@@ -202,6 +284,7 @@ public class CommandHandler implements CommandExecutor {
             String type = args[3].toLowerCase();
             String text = String.join(" ", Arrays.copyOfRange(args, 4, args.length));
             File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
+            if (false == f.exists()) { p.sendMessage("§cShop not found!"); return; }
             FileConfiguration cfg = YamlConfiguration.loadConfiguration(f);
             String root = cfg.contains(shopId + ".items") ? shopId + ".items" : "items";
             ConfigurationSection sec = cfg.getConfigurationSection(root);
@@ -210,25 +293,35 @@ public class CommandHandler implements CommandExecutor {
                     if (cfg.getInt(root + "." + k + ".slot") == slot) {
                         String pth = root + "." + k + ".item." + type;
                         if (type.equals("lore")) cfg.set(pth, Arrays.asList(text.split(";")));
-                        else cfg.set(pth, text);
+                        else cfg.set(pth, ChatUtils.color(text));
                         cfg.save(f);
                         p.performCommand("shopgui reload");
-                        p.sendMessage("§aDisplay do item na loja '" + shopId + "' atualizado!");
+                        p.sendMessage("§aItem display updated!");
                         return;
                     }
                 }
             }
-            p.sendMessage("§cItem nao encontrado na loja fisica!");
-        } catch (Exception e) { p.sendMessage("§cErro no comando item!"); }
+            p.sendMessage("§cSlot " + slot + " not found in " + shopId);
+        } catch (Exception e) { p.sendMessage("§cError in item edit!"); }
+    }
+
+    private void updateTabCache() {
+        if (null != ShopGuiAddon.getInstance().getCommand("sga").getTabCompleter()) {
+            ((TabCompleter) ShopGuiAddon.getInstance().getCommand("sga").getTabCompleter()).updateCache();
+        }
     }
 
     private void sendHelp(Player p) {
-        p.sendMessage("§b§lComandos ShopGuiAddon:");
-        p.sendMessage("§f/sga edit <loja> <slot> §7- Edita precos visualmente");
-        p.sendMessage("§f/sga itemadd <loja> <slot> <compra> <venda> §7- Adiciona item");
-        p.sendMessage("§f/sga link/replace <loja> <slot> <material> [skin] §7- Atalho Menu");
-        p.sendMessage("§f/sga menu <slot> <name|lore> <texto;texto> §7- Edita Vitrine");
-        p.sendMessage("§f/sga item <loja> <slot> <name|lore> <texto;texto> §7- Edita Item Loja");
-        p.sendMessage("§f/sga reload §7- Recarrega Addon");
+        p.sendMessage("§b§lSGA Help:");
+        p.sendMessage("§f/sga edit [shop] [slot]");
+        p.sendMessage("§f/sga itemadd [shop] [slot] [buy] [sell]");
+        p.sendMessage("§f/sga itemremove [shop] [slot]");
+        p.sendMessage("§f/sga shopcreate [name]");
+        p.sendMessage("§f/sga shopremove [name]");
+        p.sendMessage("§f/sga link/replace [shop] [slot] [mat] [skin]");
+        p.sendMessage("§f/sga unlink [slot]");
+        p.sendMessage("§f/sga menu [slot] [name|lore] [text]");
+        p.sendMessage("§f/sga item [shop] [slot] [name|lore] [text]");
+        p.sendMessage("§f/sga reload");
     }
 }

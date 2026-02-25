@@ -16,26 +16,25 @@ public class ShopGuiAddon extends JavaPlugin implements Listener {
         saveResource("messages.yml", false);
 
         if (null == Bukkit.getPluginManager().getPlugin("ShopGUIPlus")) {
-            getLogger().severe("ERRO: ShopGUI+ nao encontrado! Desativando Addon...");
+            getLogger().severe("ShopGUI+ nao encontrado! Desativando...");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
 
         getServer().getPluginManager().registerEvents(this, this);
         
-        // REGISTRO CRITICO: Se isso falhar, nenhum comando funciona
         if (null != getCommand("sga")) {
             getCommand("sga").setExecutor(new CommandHandler());
-            getLogger().info("Comando /sga registrado com sucesso!");
-        } else {
-            getLogger().severe("ERRO CRITICO: O comando 'sga' nao foi definido no plugin.yml!");
+            // REGISTRO DO AUTOCOMPLETAR
+            getCommand("sga").setTabCompleter(new TabCompleter());
+            getLogger().info("Comandos e TabCompleter registrados!");
         }
     }
 
     @EventHandler
     public void onShopGUIPlusPostEnable(ShopGUIPlusPostEnableEvent event) {
         getServer().getPluginManager().registerEvents(new EventListener(), this);
-        getLogger().info("ShopGUI+ detectado. Eventos de edicao ativados.");
+        getLogger().info("Addon 1.1 pronto para uso!");
     }
 
     public static ShopGuiAddon getInstance() {
