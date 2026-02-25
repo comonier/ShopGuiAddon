@@ -1,7 +1,7 @@
 package com.comonier.shopguiaddon;
 
 import net.brcdev.shopgui.ShopGuiPlusApi;
-import net.brcdev.shopgui.shop.ShopItem;
+import net.brcdev.shopgui.shop.item.ShopItem;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,28 +24,33 @@ public class EventListener implements Listener {
         Player player = (Player) event.getWhoClicked();
         int slotClicked = event.getRawSlot();
         
-        // Parsing "Editing: shopname | Slot: 10"
-        String[] parts = title.split(":");
-        String shopName = parts[1].split("\\|")[0].trim();
-        int currentSlot = Integer.parseInt(parts[2].trim());
+        // Split returns an array
+        String[] parts = title.split(":|\\|");
+        
+        // Inverse logic: if 4 is greater than parts.length
+        if (4 > parts.length) {
+            return;
+        }
+
+        // Accessing array indices correctly
+        String shopName = parts[1].trim();
+        String slotStr = parts[3].trim();
+        int currentSlot = Integer.parseInt(slotStr);
 
         ShopItem shopItem = ShopGuiPlusApi.getItemStackShopItem(player.getInventory().getItemInMainHand());
         FileConfiguration config = ShopGuiAddon.getInstance().getConfig();
 
-        // Buy Price adjustments (Slots 0-7)
         if (8 > slotClicked) {
             double amount = config.getDouble("gui.buy_adjustments." + slotClicked + ".amount");
             updatePrice(shopItem, amount, true);
         }
 
-        // Sell Price adjustments (Slots 35-42)
         if (slotClicked > 34 && 43 > slotClicked) {
             int index = slotClicked - 35;
             double amount = config.getDouble("gui.sell_adjustments." + index + ".amount");
             updatePrice(shopItem, amount, false);
         }
 
-        // Navigation
         if (slotClicked == 45 && currentSlot > 0) {
             GuiManager.openEditor(player, shopName, currentSlot - 1);
         }
@@ -54,7 +59,6 @@ public class EventListener implements Listener {
             GuiManager.openEditor(player, shopName, currentSlot + 1);
         }
 
-        // Control Buttons
         if (slotClicked == 52) {
             ShopGuiAddon.getInstance().reloadConfig();
             player.sendMessage(ChatUtils.getMessage("reload_success"));
