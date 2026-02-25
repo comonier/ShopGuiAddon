@@ -1,83 +1,90 @@
 package com.comonier.shopguiaddon;
 
-import net.brcdev.shopgui.ShopGuiPlusApi;
-import net.brcdev.shopgui.shop.item.ShopItem;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.InventoryView;
-import org.bukkit.configuration.file.FileConfiguration;
+import java.io.File;
+import java.io.IOException;
 
 public class EventListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        InventoryView view = event.getView();
-        String title = view.getTitle();
+        String title = event.getView().getTitle();
+        if (false == title.contains("Editing:")) return;
         
-        if (!title.contains("Editing:")) {
-            return;
-        }
-
         event.setCancelled(true);
-        Player player = (Player) event.getWhoClicked();
-        int slotClicked = event.getRawSlot();
-        
-        // Split returns an array
-        String[] parts = title.split(":|\\|");
-        
-        // Inverse logic: if 4 is greater than parts.length
-        if (4 > parts.length) {
+        Player p = (Player) event.getWhoClicked();
+        int clickedSlot = event.getRawSlot();
+
+        // Extrair Shop e Slot do Titulo
+        String[] pts = title.split(":|\\|");
+        if (4 > pts.length) return;
+
+        String shopId = pts[1].trim();
+        int targetSlot = Integer.parseInt(pts[3].trim());
+
+        // Botao de Reload do ShopGUI+ (Slot 53)
+        if (clickedSlot == 53) {
+            p.closeInventory();
+            p.performCommand("shopgui reload");
             return;
         }
 
-        // Accessing array indices correctly
-        String shopName = parts[1].trim();
-        String slotStr = parts[3].trim();
-        int currentSlot = Integer.parseInt(slotStr);
+        File shopFile = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
+        if (false == shopFile.exists()) return;
 
-        ShopItem shopItem = ShopGuiPlusApi.getItemStackShopItem(player.getInventory().getItemInMainHand());
-        FileConfiguration config = ShopGuiAddon.getInstance().getConfig();
-
-        if (8 > slotClicked) {
-            double amount = config.getDouble("gui.buy_adjustments." + slotClicked + ".amount");
-            updatePrice(shopItem, amount, true);
+        FileConfiguration shopConfig = YamlConfiguration.loadConfiguration(shopFile);
+        
+        // LOGICA DE RAIZ PARA SALVAMENTO (Identifica armor.items ou items)
+        String basePath = "items";
+        if (false == shopConfig.contains("items") && shopConfig.contains(shopId + ".items")) {
+            basePath = shopId + ".items";
         }
 
-        if (slotClicked > 34 && 43 > slotClicked) {
-            int index = slotClicked - 35;
-            double amount = config.getDouble("gui.sell_adjustments." + index + ".amount");
-            updatePrice(shopItem, amount, false);
+        String itemKey = null;
+        if (null != shopConfig.getConfigurationSection(basePath)) {
+            for (String key : shopConfig.getConfigurationSection(basePath).getKeys(false)) {
+                if (shopConfig.getInt(basePath + "." + key + ".slot") == targetSlot) {
+                    itemKey = key;
+                    break;
+                }
+            }
         }
 
-        if (slotClicked == 45 && currentSlot > 0) {
-            GuiManager.openEditor(player, shopName, currentSlot - 1);
+        // Se nao achou o item no arquivo, encerra para nao criar lixo
+        if (null == itemKey) return;
+
+        String fullPath = basePath + "." + itemKey;
+        boolean changed = false;
+
+        // Ajustes de Compra (Slots 18 a 25)
+        if (clickedSlot >= 18 && 26 > clickedSlot) {
+            double amt = ShopGuiAddon.getInstance().getConfig().getDouble("gui.buy_adjustments." + (clickedSlot - 18) + ".amount");
+            double current = shopConfig.getDouble(fullPath + ".buyPrice");
+            shopConfig.set(fullPath + ".buyPrice", (current + amt) > 0 ? (current + amt) : 0);
+            changed = true;
+        } 
+        // Ajustes de Venda (Slots 27 a 34)
+        else if (clickedSlot >= 27 && 35 > clickedSlot) {
+            double amt = ShopGuiAddon.getInstance().getConfig().getDouble("gui.sell_adjustments." + (clickedSlot - 27) + ".amount");
+            double current = shopConfig.getDouble(fullPath + ".sellPrice");
+            shopConfig.set(fullPath + ".sellPrice", (current + amt) > 0 ? (current + amt) : 0);
+            changed = true;
         }
 
-        if (slotClicked == 46 && 53 > currentSlot) {
-            GuiManager.openEditor(player, shopName, currentSlot + 1);
-        }
-
-        if (slotClicked == 52) {
-            ShopGuiAddon.getInstance().reloadConfig();
-            player.sendMessage(ChatUtils.getMessage("reload_success"));
-        }
-
-        if (slotClicked == 53) {
-            player.performCommand("shopgui reload");
-            player.sendMessage("§d[ShopGUI+] Saved and Reloaded!");
-        }
-    }
-
-    private void updatePrice(ShopItem item, double amount, boolean isBuy) {
-        if (item == null) return;
-        if (isBuy) {
-            double next = item.getBuyPrice() + amount;
-            item.setBuyPrice(next > 0 ? next : 0);
-        } else {
-            double next = item.getSellPrice() + amount;
-            item.setSellPrice(next > 0 ? next : 0);
+        if (changed) {
+            try {
+                shopConfig.save(shopFile);
+                // Reabre a GUI para atualizar o visor com o novo preco lido do arquivo
+                GuiManager.openEditor(p, shopId, targetSlot);
+            } catch (IOException e) { 
+                e.printStackTrace(); 
+            }
         }
     }
 }

@@ -1,50 +1,43 @@
 package com.comonier.shopguiaddon;
 
+import net.brcdev.shopgui.event.ShopGUIPlusPostEnableEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import java.util.logging.Level;
 
-public class ShopGuiAddon extends JavaPlugin {
-
+public class ShopGuiAddon extends JavaPlugin implements Listener {
     private static ShopGuiAddon instance;
 
     @Override
     public void onEnable() {
         instance = this;
-
-        // Saving default configuration files if they do not exist
         saveDefaultConfig();
         saveResource("messages.yml", false);
 
-        // Dependency Check: ShopGUI+
-        // Inverse Logic: if the plugin returned is null, it means it's missing
-        if (Bukkit.getPluginManager().getPlugin("ShopGUIPlus") == null) {
-            getLogger().log(Level.SEVERE, "-------------------------------------------");
-            getLogger().log(Level.SEVERE, "ShopGUI+ NOT FOUND! DISABLING ADDON.");
-            getLogger().log(Level.SEVERE, "-------------------------------------------");
+        if (null == Bukkit.getPluginManager().getPlugin("ShopGUIPlus")) {
+            getLogger().severe("ERRO: ShopGUI+ nao encontrado! Desativando Addon...");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
 
-        // Registering the main Command Executor (/sga)
-        getCommand("sga").setExecutor(new CommandHandler());
+        getServer().getPluginManager().registerEvents(this, this);
+        
+        // REGISTRO CRITICO: Se isso falhar, nenhum comando funciona
+        if (null != getCommand("sga")) {
+            getCommand("sga").setExecutor(new CommandHandler());
+            getLogger().info("Comando /sga registrado com sucesso!");
+        } else {
+            getLogger().severe("ERRO CRITICO: O comando 'sga' nao foi definido no plugin.yml!");
+        }
+    }
 
-        // Registering the Event Listener for GUI interactions
+    @EventHandler
+    public void onShopGUIPlusPostEnable(ShopGUIPlusPostEnableEvent event) {
         getServer().getPluginManager().registerEvents(new EventListener(), this);
-
-        getLogger().info("ShopGuiAddon [v1.0] successfully initialized for Minecraft 1.21.1!");
-        getLogger().info("ShopGUI+ API support detected and hooked.");
+        getLogger().info("ShopGUI+ detectado. Eventos de edicao ativados.");
     }
 
-    @Override
-    public void onDisable() {
-        getLogger().info("ShopGuiAddon disabled. Goodbye!");
-    }
-
-    /**
-     * Returns the main instance for global access to config and resources.
-     * @return ShopGuiAddon instance
-     */
     public static ShopGuiAddon getInstance() {
         return instance;
     }

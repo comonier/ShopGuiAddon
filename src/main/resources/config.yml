@@ -1,41 +1,34 @@
-# ShopGuiAddon - General Configuration
-# Version: 1.21.1
-
-language: en
+language: "pt"
 
 gui:
   title: "Editing: %shop% | Slot: %slot%"
   size: 54
   
-  # Buy Price Buttons (Slots 1-8 -> 0-7) - INCREMENT
+  # Fileira 3 (Slots 18 a 25): COMPRA
   buy_adjustments:
-    - {slot: 0, amount: 0.1, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 0.10 Coins"}
-    - {slot: 1, amount: 1.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 1 Coin"}
-    - {slot: 2, amount: 10.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 10 Coins"}
-    - {slot: 3, amount: 100.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 100 Coins"}
-    - {slot: 4, amount: 1000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 1000 Coins"}
-    - {slot: 5, amount: 10000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 10000 Coins"}
-    - {slot: 6, amount: 100000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 100k Coins"}
-    - {slot: 7, amount: 1000000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 1M Coins"}
+    0: { material: "LIME_STAINED_GLASS_PANE", name: "&a+0.10", amount: 0.1 }
+    1: { material: "LIME_DYE", name: "&a+1.00", amount: 1.0 }
+    2: { material: "LIME_WOOL", name: "&a+10.00", amount: 10.0 }
+    3: { material: "LIME_CONCRETE", name: "&a+100.00", amount: 100.0 }
+    4: { material: "EMERALD", name: "&a+1,000.00", amount: 1000.0 }
+    5: { material: "EMERALD_BLOCK", name: "&a+10,000.00", amount: 10000.0 }
+    6: { material: "DIAMOND", name: "&a+100,000.00", amount: 100000.0 }
+    7: { material: "NETHER_STAR", name: "&b&l+1,000,000.00", amount: 1000000.0 }
 
-  # Sell Price Buttons (Slots 36-43 -> 35-42) - DECREMENT
+  # Fileira 4 (Slots 27 a 34): VENDA
   sell_adjustments:
-    - {slot: 35, amount: -0.1, material: "RED_STAINED_GLASS_PANE", name: "&c- 0.10 Coins"}
-    - {slot: 36, amount: -1.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 1 Coin"}
-    - {slot: 37, amount: -10.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 10 Coins"}
-    - {slot: 38, amount: -100.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 100 Coins"}
-    - {slot: 39, amount: -1000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 1000 Coins"}
-    - {slot: 40, amount: -10000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 10000 Coins"}
-    - {slot: 41, amount: -100000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 100k Coins"}
-    - {slot: 42, amount: -1000000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 1M Coins"}
+    0: { material: "RED_STAINED_GLASS_PANE", name: "&c+0.10", amount: 0.1 }
+    1: { material: "RED_DYE", name: "&c+1.00", amount: 1.0 }
+    2: { material: "RED_WOOL", name: "&c+10.00", amount: 10.0 }
+    3: { material: "RED_CONCRETE", name: "&c+100.00", amount: 100.0 }
+    4: { material: "REDSTONE", name: "&c+1,000.00", amount: 1000.0 }
+    5: { material: "REDSTONE_BLOCK", name: "&c+10,000.00", amount: 10000.0 }
+    6: { material: "TNT", name: "&c+100,000.00", amount: 100000.0 }
+    7: { material: "NETHERITE_BLOCK", name: "&4&l+1,000,000.00", amount: 1000000.0 }
 
+  # Fileira 6 (Slots 45 a 53): CONTROLES
   controls:
-    prev_slot: {slot: 45, material: "ARROW", name: "&ePrevious Slot"}
-    next_slot: {slot: 46, material: "ARROW", name: "&eNext Slot"}
-    reload_sga: {slot: 52, material: "PAPER", name: "&bReload ShopGuiAddon"}
-    reload_sgp: {slot: 53, material: "NETHER_STAR", name: "&dSave & Reload ShopGUI+"}
-
-item_format:
-  type: "item"
-  quantity: 1
-  page: 1
+    prev_slot: { material: "ARROW", name: "&eSlot Anterior" }
+    next_slot: { material: "ARROW", name: "&ePróximo Slot" }
+    reload_sga: { material: "CLOCK", name: "&bRecarregar ShopGuiAddon" }
+    reload_sgp: { material: "BLAZE_POWDER", name: "&6Recarregar ShopGUI+" }

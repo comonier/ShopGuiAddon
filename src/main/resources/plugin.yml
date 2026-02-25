@@ -1,18 +1,12 @@
 name: ShopGuiAddon
-version: 1.0
+version: 1.1
 main: com.comonier.shopguiaddon.ShopGuiAddon
 api-version: '1.21'
 author: Comonier
-description: Addon para edição in-game e gerenciamento do ShopGuiPlus.
-
+depend: [ShopGUIPlus]
+description: Addon avançado para ShopGUI+ com suporte a Skins, Lore e Edição Visual.
 commands:
   sga:
     description: Comando principal do ShopGuiAddon.
-    usage: /sga [edit|itemadd|reload]
+    usage: /sga [help|edit|itemadd|reload|shopcreate|link|replace|menu|item]
     permission: shopguiaddon.admin
-    aliases: [shopguiaddon]
-
-permissions:
-  shopguiaddon.admin:
-    description: Permite acesso total aos comandos de edição e adição de itens.
-    default: op
