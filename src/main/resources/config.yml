@@ -1,0 +1,41 @@
+# ShopGuiAddon - General Configuration
+# Version: 1.21.1
+
+language: en
+
+gui:
+  title: "Editing: %shop% | Slot: %slot%"
+  size: 54
+  
+  # Buy Price Buttons (Slots 1-8 -> 0-7) - INCREMENT
+  buy_adjustments:
+    - {slot: 0, amount: 0.1, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 0.10 Coins"}
+    - {slot: 1, amount: 1.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 1 Coin"}
+    - {slot: 2, amount: 10.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 10 Coins"}
+    - {slot: 3, amount: 100.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 100 Coins"}
+    - {slot: 4, amount: 1000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 1000 Coins"}
+    - {slot: 5, amount: 10000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 10000 Coins"}
+    - {slot: 6, amount: 100000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 100k Coins"}
+    - {slot: 7, amount: 1000000.0, material: "LIME_STAINED_GLASS_PANE", name: "&a+ 1M Coins"}
+
+  # Sell Price Buttons (Slots 36-43 -> 35-42) - DECREMENT
+  sell_adjustments:
+    - {slot: 35, amount: -0.1, material: "RED_STAINED_GLASS_PANE", name: "&c- 0.10 Coins"}
+    - {slot: 36, amount: -1.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 1 Coin"}
+    - {slot: 37, amount: -10.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 10 Coins"}
+    - {slot: 38, amount: -100.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 100 Coins"}
+    - {slot: 39, amount: -1000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 1000 Coins"}
+    - {slot: 40, amount: -10000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 10000 Coins"}
+    - {slot: 41, amount: -100000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 100k Coins"}
+    - {slot: 42, amount: -1000000.0, material: "RED_STAINED_GLASS_PANE", name: "&c- 1M Coins"}
+
+  controls:
+    prev_slot: {slot: 45, material: "ARROW", name: "&ePrevious Slot"}
+    next_slot: {slot: 46, material: "ARROW", name: "&eNext Slot"}
+    reload_sga: {slot: 52, material: "PAPER", name: "&bReload ShopGuiAddon"}
+    reload_sgp: {slot: 53, material: "NETHER_STAR", name: "&dSave & Reload ShopGUI+"}
+
+item_format:
+  type: "item"
+  quantity: 1
+  page: 1

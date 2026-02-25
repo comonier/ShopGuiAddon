@@ -1,0 +1,22 @@
+# Default language: en
+# Available options: en, pt
+
+en:
+  prefix: "&8[&bShopGuiAddon&8] "
+  no_permission: "&cYou do not have permission to perform this action."
+  reload_success: "&aPlugin configurations reloaded successfully!"
+  shop_not_found: "&cThe shop %shop% was not found in ShopGUI+."
+  item_added: "&aItem successfully added to shop %shop% at slot %slot%!"
+  invalid_usage: "&cInvalid usage! Use: /sga [edit|itemadd|reload]"
+  error_item_hand: "&cYou must be holding an item in your main hand!"
+  gui_opened: "&aOpening editor for shop %shop%..."
+
+pt:
+  prefix: "&8[&bShopGuiAddon&8] "
+  no_permission: "&cVocê não tem permissão para executar esta ação."
+  reload_success: "&aConfigurações do plugin recarregadas com sucesso!"
+  shop_not_found: "&cO shop %shop% não foi encontrado no ShopGUI+."
+  item_added: "&aItem adicionado com sucesso ao shop %shop% no slot %slot%!"
+  invalid_usage: "&cUso inválido! Utilize: /sga [edit|itemadd|reload]"
+  error_item_hand: "&cVocê precisa estar segurando um item na mão principal!"
+  gui_opened: "&aAbrindo editor para o shop %shop%..."
