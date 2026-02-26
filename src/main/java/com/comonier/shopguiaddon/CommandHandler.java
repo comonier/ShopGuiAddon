@@ -54,7 +54,7 @@ public class CommandHandler implements CommandExecutor {
         }
 
         else if (sub.equals("itemadd")) {
-            if (5 > args.length) { player.sendMessage("§cUsage: /sga itemadd [shop] [slot] [buy] [sell]"); return true; }
+            if (6 > args.length) { player.sendMessage("§cUsage: /sga itemadd [shop] [slot] [buy] [sell] [amount]"); return true; }
             handleItemAdd(player, args);
             return true;
         }
@@ -71,7 +71,6 @@ public class CommandHandler implements CommandExecutor {
             return true;
         }
 
-        // NOVO COMANDO: SHOPREMOVE
         else if (sub.equals("shopremove")) {
             if (2 > args.length) { player.sendMessage("§cUsage: /sga shopremove [name]"); return true; }
             handleShopRemove(player, args[1].toLowerCase());
@@ -112,28 +111,54 @@ public class CommandHandler implements CommandExecutor {
             int slotId = Integer.parseInt(args[2]);
             double buy = Double.parseDouble(args[3]);
             double sell = Double.parseDouble(args[4]);
+            int amount = Integer.parseInt(args[5]);
+
             ItemStack item = p.getInventory().getItemInMainHand();
-            if (null == item || Material.AIR == item.getType()) { p.sendMessage("§cHold an item!"); return; }
+            if (null == item || Material.AIR == item.getType()) { 
+                p.sendMessage(ChatUtils.getMessage("error_item_hand")); 
+                return; 
+            }
+            
             File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
-            if (false == f.exists()) { p.sendMessage("§cShop not found!"); return; }
+            if (false == f.exists()) { 
+                p.sendMessage(ChatUtils.getMessage("error_shop_file").replace("%shop%", shopId)); 
+                return; 
+            }
+            
             FileConfiguration cfg = YamlConfiguration.loadConfiguration(f);
             String root = cfg.contains(shopId + ".items") ? shopId + ".items" : "items";
             ConfigurationSection sec = cfg.getConfigurationSection(root);
+            
             if (null != sec) {
                 for (String k : sec.getKeys(false)) {
                     if (cfg.getInt(root + "." + k + ".slot") == slotId) { cfg.set(root + "." + k, null); break; }
                 }
             }
+            
             String key = item.getType().name().toLowerCase() + "_" + System.currentTimeMillis();
-            cfg.set(root + "." + key + ".type", "item");
-            cfg.set(root + "." + key + ".item.material", item.getType().name());
-            cfg.set(root + "." + key + ".slot", slotId);
-            cfg.set(root + "." + key + ".buyPrice", buy);
-            cfg.set(root + "." + key + ".sellPrice", sell);
+            String pth = root + "." + key;
+            
+            cfg.set(pth + ".type", "item");
+            cfg.set(pth + ".item.material", item.getType().name());
+            cfg.set(pth + ".item.quantity", amount);
+            cfg.set(pth + ".slot", slotId);
+            cfg.set(pth + ".buyPrice", buy);
+            cfg.set(pth + ".sellPrice", sell);
+            
             cfg.save(f);
             p.performCommand("shopgui reload");
-            p.sendMessage("§aItem added to " + shopId);
-        } catch (Exception e) { p.sendMessage("§cError in itemadd!"); }
+            
+            String msg = ChatUtils.getMessage("item_added")
+                    .replace("%shop%", shopId)
+                    .replace("%slot%", String.valueOf(slotId))
+                    .replace("%amount%", String.valueOf(amount));
+            p.sendMessage(msg);
+
+        } catch (NumberFormatException e) {
+            p.sendMessage(ChatUtils.getMessage("error_invalid_number"));
+        } catch (Exception e) { 
+            p.sendMessage("§cAn unexpected error occurred during item addition."); 
+        }
     }
 
     private void handleItemRemove(Player p, String shopId, String slotStr) {
@@ -168,6 +193,7 @@ public class CommandHandler implements CommandExecutor {
             cfg.set(id + ".size", 54);
             cfg.set(id + ".items.1.type", "item");
             cfg.set(id + ".items.1.item.material", "STONE");
+            cfg.set(id + ".items.1.item.quantity", 1);
             cfg.set(id + ".items.1.slot", 10);
             cfg.set(id + ".items.1.buyPrice", 10.0);
             cfg.set(id + ".items.1.sellPrice", 5.0);
@@ -178,7 +204,6 @@ public class CommandHandler implements CommandExecutor {
         } catch (Exception e) { p.sendMessage("§cError creating shop."); }
     }
 
-    // LOGICA DO SHOPREMOVE
     private void handleShopRemove(Player p, String id) {
         File f = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), id + ".yml");
         if (f.exists()) {
@@ -312,16 +337,12 @@ public class CommandHandler implements CommandExecutor {
     }
 
     private void sendHelp(Player p) {
-        p.sendMessage("§b§lSGA Help:");
-        p.sendMessage("§f/sga edit [shop] [slot]");
-        p.sendMessage("§f/sga itemadd [shop] [slot] [buy] [sell]");
-        p.sendMessage("§f/sga itemremove [shop] [slot]");
-        p.sendMessage("§f/sga shopcreate [name]");
-        p.sendMessage("§f/sga shopremove [name]");
-        p.sendMessage("§f/sga link/replace [shop] [slot] [mat] [skin]");
-        p.sendMessage("§f/sga unlink [slot]");
-        p.sendMessage("§f/sga menu [slot] [name|lore] [text]");
-        p.sendMessage("§f/sga item [shop] [slot] [name|lore] [text]");
-        p.sendMessage("§f/sga reload");
+        p.sendMessage(ChatUtils.getMessage("help_header"));
+        p.sendMessage(ChatUtils.getMessage("help_edit"));
+        p.sendMessage(ChatUtils.getMessage("help_itemadd"));
+        p.sendMessage(ChatUtils.getMessage("help_shopcreate"));
+        p.sendMessage(ChatUtils.getMessage("help_shopremove"));
+        p.sendMessage(ChatUtils.getMessage("help_link"));
+        p.sendMessage(ChatUtils.getMessage("help_reload"));
     }
 }

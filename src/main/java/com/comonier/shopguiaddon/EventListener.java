@@ -25,31 +25,34 @@ public class EventListener implements Listener {
         Player p = (Player) event.getWhoClicked();
         int clickedSlot = event.getRawSlot();
 
+        // 1. EXTRAÇÃO DE DADOS DO TÍTULO
         String[] pts = title.split(":|\\|");
         if (4 > pts.length) return;
-
         String shopId = pts[1].trim();
         int targetSlot = Integer.parseInt(pts[3].trim());
 
+        // 2. CONTROLES GERAIS (RELOAD SGP)
         if (clickedSlot == 53) {
             p.closeInventory();
             p.performCommand("shopgui reload");
             return;
         }
 
-        if (clickedSlot == 26 || clickedSlot == 35) {
+        // 3. INTERRUPTORES DE MODO (SOMA/SUBTRAÇÃO)
+        if (clickedSlot == 26 || clickedSlot == 35 || clickedSlot == 44) {
             ItemStack item = event.getCurrentItem();
             if (null != item) {
                 Material current = item.getType();
                 Material next = (current == Material.WHITE_STAINED_GLASS_PANE) ? Material.BLACK_STAINED_GLASS_PANE : Material.WHITE_STAINED_GLASS_PANE;
-                event.getInventory().setItem(clickedSlot, GuiManager.createItem(next, (next == Material.WHITE_STAINED_GLASS_PANE) ? "&a&lMODE: ADD (+)" : "&c&lMODE: SUBTRACT (-)"));
+                String modeName = (next == Material.WHITE_STAINED_GLASS_PANE) ? "&a&lMODE: ADD (+)" : "&c&lMODE: SUBTRACT (-)";
+                event.getInventory().setItem(clickedSlot, GuiManager.createItem(next, modeName));
             }
             return;
         }
 
+        // 4. CARREGAMENTO DO ARQUIVO DA LOJA
         File shopFile = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
         if (false == shopFile.exists()) return;
-
         FileConfiguration shopConfig = YamlConfiguration.loadConfiguration(shopFile);
         String root = shopConfig.contains(shopId + ".items") ? shopId + ".items" : "items";
 
@@ -62,29 +65,23 @@ public class EventListener implements Listener {
                 }
             }
         }
-
         if (null == itemKey) return;
         String fullPath = root + "." + itemKey;
         boolean changed = false;
 
-        // LOGICA DE COMPRA (18-25)
+        // 5. LÓGICA INDEPENDENTE POR FILEIRA (EVITA BUG DE PREÇO)
+
+        // FILEIRA DE COMPRA (Slots 18 a 25)
         if (clickedSlot >= 18 && 26 > clickedSlot) {
             double amt = ShopGuiAddon.getInstance().getConfig().getDouble("gui.buy_adjustments." + (clickedSlot - 18) + ".amount");
             double current = shopConfig.getDouble(fullPath + ".buyPrice");
             
             ItemStack toggle = event.getInventory().getItem(26);
-            boolean isSubtraction = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
+            boolean isSub = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
             
-            // CORREÇÃO DOS CENTAVOS USANDO BIGDECIMAL PARA PRECISÃO TOTAL
             BigDecimal currentBD = BigDecimal.valueOf(current);
             BigDecimal amtBD = BigDecimal.valueOf(amt);
-            BigDecimal result;
-            
-            if (isSubtraction) {
-                result = currentBD.subtract(amtBD);
-            } else {
-                result = currentBD.add(amtBD);
-            }
+            BigDecimal result = isSub ? currentBD.subtract(amtBD) : currentBD.add(amtBD);
             
             double newVal = result.setScale(2, RoundingMode.HALF_UP).doubleValue();
             if (0.0 > newVal) newVal = 0.0;
@@ -92,23 +89,18 @@ public class EventListener implements Listener {
             shopConfig.set(fullPath + ".buyPrice", newVal);
             changed = true;
         }
-        // LOGICA DE VENDA (27-34)
+
+        // FILEIRA DE VENDA (Slots 27 a 34)
         else if (clickedSlot >= 27 && 35 > clickedSlot) {
             double amt = ShopGuiAddon.getInstance().getConfig().getDouble("gui.sell_adjustments." + (clickedSlot - 27) + ".amount");
             double current = shopConfig.getDouble(fullPath + ".sellPrice");
             
             ItemStack toggle = event.getInventory().getItem(35);
-            boolean isSubtraction = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
+            boolean isSub = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
             
             BigDecimal currentBD = BigDecimal.valueOf(current);
             BigDecimal amtBD = BigDecimal.valueOf(amt);
-            BigDecimal result;
-            
-            if (isSubtraction) {
-                result = currentBD.subtract(amtBD);
-            } else {
-                result = currentBD.add(amtBD);
-            }
+            BigDecimal result = isSub ? currentBD.subtract(amtBD) : currentBD.add(amtBD);
             
             double newVal = result.setScale(2, RoundingMode.HALF_UP).doubleValue();
             if (0.0 > newVal) newVal = 0.0;
@@ -117,6 +109,23 @@ public class EventListener implements Listener {
             changed = true;
         }
 
+        // FILEIRA DE QUANTIDADE (Slots 36 a 43)
+        else if (clickedSlot >= 36 && 44 > clickedSlot) {
+            int[] amounts = {1, 2, 4, 8, 16, 32, 64, 100};
+            int amtAdjust = amounts[clickedSlot - 36];
+            int current = shopConfig.getInt(fullPath + ".item.quantity", 1);
+            
+            ItemStack toggle = event.getInventory().getItem(44);
+            boolean isSub = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
+            
+            int newVal = isSub ? (current - amtAdjust) : (current + amtAdjust);
+            if (1 > newVal) newVal = 1;
+            
+            shopConfig.set(fullPath + ".item.quantity", newVal);
+            changed = true;
+        }
+
+        // 6. SALVAMENTO E ATUALIZAÇÃO DO VISOR
         if (changed) {
             try {
                 shopConfig.save(shopFile);

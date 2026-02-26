@@ -23,6 +23,7 @@ public class GuiManager {
         
         Inventory gui = Bukkit.createInventory(null, 54, title);
 
+        // 1. FUNDO E DECORACAO
         ItemStack filler = createItem(Material.GRAY_STAINED_GLASS_PANE, " ");
         for (int i = 0; 54 > i; i++) { gui.setItem(i, filler); }
 
@@ -31,12 +32,15 @@ public class GuiManager {
         gui.setItem(5, highlight);
         gui.setItem(13, highlight);
 
-        // INTERRUPTORES COM LORE EXPLICATIVA
+        // 2. INTERRUPTORES (SOMA/SUBTRAIR) - POSICIONAMENTO RIGIDO
         gui.setItem(26, createItemWithLore(Material.WHITE_STAINED_GLASS_PANE, "&a&lMODE: ADD (+)", 
                 Arrays.asList("&7Click to switch to", "&c&lSUBTRACT (-) &7mode.")));
         gui.setItem(35, createItemWithLore(Material.WHITE_STAINED_GLASS_PANE, "&a&lMODE: ADD (+)", 
                 Arrays.asList("&7Click to switch to", "&c&lSUBTRACT (-) &7mode.")));
+        gui.setItem(44, createItemWithLore(Material.WHITE_STAINED_GLASS_PANE, "&a&lMODE: ADD (+)", 
+                Arrays.asList("&7Click to switch to", "&c&lSUBTRACT (-) &7mode.")));
 
+        // 3. LEITURA DE DADOS
         File shopFile = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopName + ".yml");
         FileConfiguration shopConfig = YamlConfiguration.loadConfiguration(shopFile);
         String root = shopConfig.contains(shopName + ".items") ? shopName + ".items" : "items";
@@ -51,11 +55,20 @@ public class GuiManager {
 
         updateVisor(gui, shopConfig, root, itemKey, slotId);
 
+        // 4. BOTOES DE AJUSTE (DISTRIBUICAO POR FILEIRA)
         for (int i = 0; 8 > i; i++) {
+            // Compra: 18, 19, 20, 21, 22, 23, 24, 25
             gui.setItem(18 + i, createItemFromConfig(config, "gui.buy_adjustments." + i));
+            
+            // Venda: 27, 28, 29, 30, 31, 32, 33, 34
             gui.setItem(27 + i, createItemFromConfig(config, "gui.sell_adjustments." + i));
+            
+            // Quantidade: 36, 37, 38, 39, 40, 41, 42, 43
+            int[] amounts = {1, 2, 4, 8, 16, 32, 64, 100};
+            gui.setItem(36 + i, createItem(Material.CHEST, "&eAmount Adjustment: " + amounts[i]));
         }
 
+        // 5. CONTROLES DE RODAPE
         if (config.contains("gui.controls.prev_slot")) gui.setItem(45, createItemFromConfig(config, "gui.controls.prev_slot"));
         if (config.contains("gui.controls.next_slot")) gui.setItem(46, createItemFromConfig(config, "gui.controls.next_slot"));
         if (config.contains("gui.controls.reload_sga")) gui.setItem(52, createItemFromConfig(config, "gui.controls.reload_sga"));
@@ -69,15 +82,20 @@ public class GuiManager {
         if (null != key) {
             double buy = shopConfig.getDouble(root + "." + key + ".buyPrice");
             double sell = shopConfig.getDouble(root + "." + key + ".sellPrice");
+            int quantity = shopConfig.getInt(root + "." + key + ".item.quantity", 1);
             String matName = shopConfig.getString(root + "." + key + ".item.material");
+            
             Material m = Material.matchMaterial(null != matName ? matName : "BARRIER");
             visor = new ItemStack(null != m ? m : Material.BARRIER);
             ItemMeta meta = visor.getItemMeta();
+            
             List lore = new ArrayList();
             lore.add(ChatUtils.color("&fBuy Price: &a$" + String.format("%.2f", buy)));
             lore.add(ChatUtils.color("&fSell Price: &c$" + String.format("%.2f", sell)));
+            lore.add(ChatUtils.color("&fQuantity: &e" + quantity));
             lore.add(" ");
             lore.add(ChatUtils.color("&7Editing slot: " + slotId));
+            
             meta.setDisplayName(ChatUtils.color("&b&lCurrent Item"));
             meta.setLore(lore);
             visor.setItemMeta(meta);
@@ -89,8 +107,7 @@ public class GuiManager {
 
     private static ItemStack createItemFromConfig(FileConfiguration config, String path) {
         String matName = config.getString(path + ".material", "STONE");
-        Material mat = Material.matchMaterial(null != matName ? matName : "BARRIER");
-        return createItem(mat, config.getString(path + ".name", "&cError"));
+        return createItem(Material.matchMaterial(matName), config.getString(path + ".name", "&cError"));
     }
 
     public static ItemStack createItem(Material mat, String name) {
@@ -109,10 +126,7 @@ public class GuiManager {
         if (null != meta) {
             meta.setDisplayName(ChatUtils.color(name));
             List coloredLore = new ArrayList();
-            // CORREÇÃO AQUI: Cast explícito para String para evitar erro de Object
-            for (Object obj : lore) { 
-                coloredLore.add(ChatUtils.color((String) obj)); 
-            }
+            for (Object obj : lore) { coloredLore.add(ChatUtils.color((String) obj)); }
             meta.setLore(coloredLore);
             item.setItemMeta(meta);
         }

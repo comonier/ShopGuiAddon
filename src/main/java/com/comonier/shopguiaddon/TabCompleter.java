@@ -39,15 +39,16 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
     @Override
     public List onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List completions = new ArrayList();
-        // Lista atualizada com shopremove
         List subs = Arrays.asList("help", "edit", "itemadd", "itemremove", "reload", "shopcreate", "shopremove", "link", "replace", "unlink", "menu", "item");
 
+        // 1. Sugestao de Subcomandos
         if (1 == args.length) {
             StringUtil.copyPartialMatches(args[0], subs, completions);
         } 
+        
+        // 2. Sugestao de Lojas ou Slots
         else if (2 == args.length) {
             String sub = args[0].toLowerCase();
-            // Comandos que sugerem nomes de lojas do cache
             List needsShop = Arrays.asList("edit", "itemadd", "itemremove", "item", "shopremove");
             
             if (needsShop.contains(sub)) {
@@ -56,6 +57,19 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
                 completions.add("[slot]");
             }
         }
+
+        // 3. Sugestoes especificas para o itemadd
+        else if (args[0].equalsIgnoreCase("itemadd")) {
+            if (3 == args.length) completions.add("[slot]");
+            else if (4 == args.length) completions.add("[buyPrice]");
+            else if (5 == args.length) completions.add("[sellPrice]");
+            else if (6 == args.length) {
+                List amounts = Arrays.asList("1", "16", "32", "64");
+                StringUtil.copyPartialMatches(args[5], amounts, completions);
+            }
+        }
+
+        // 4. Sugestao de Materiais (4º argumento de link/replace)
         else if (4 == args.length) {
             String sub = args[0].toLowerCase();
             if (sub.equals("link") || sub.equals("replace")) {
