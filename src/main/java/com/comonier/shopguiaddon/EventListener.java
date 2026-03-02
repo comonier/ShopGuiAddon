@@ -1,136 +1,111 @@
 package com.comonier.shopguiaddon;
 
-import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.ItemStack;
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.Arrays;
 
 public class EventListener implements Listener {
 
-    @EventHandler
+    // --- NOVO: BLOQUEIA O ARRASTE DOS ITENS ---
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        String title = ChatColor.stripColor(event.getView().getTitle());
+        if (title.contains("Editing:") || title.contains("Editando:")) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryClick(InventoryClickEvent event) {
-        String title = event.getView().getTitle();
-        if (false == title.contains("Editing:")) return;
+        if (!(event.getWhoClicked() instanceof Player p)) return;
+
+        String rawTitle = event.getView().getTitle();
+        String cleanTitle = ChatColor.stripColor(rawTitle);
         
+        // Verificação expandida para aceitar tanto inglês quanto português
+        if (!cleanTitle.contains("Editing:") && !cleanTitle.contains("Editando:")) return;
+        
+        // CANCELAMENTO GLOBAL: Isso impede de "pegar" ou "arrastar" qualquer item
         event.setCancelled(true);
-        Player p = (Player) event.getWhoClicked();
-        int clickedSlot = event.getRawSlot();
+        
+        if (event.getClickedInventory() == null) return;
+        
+        // Bloqueia interações com o inventário do próprio jogador enquanto o editor está aberto
+        if (event.getClickedInventory().equals(p.getInventory())) return;
 
-        // 1. EXTRAÇÃO DE DADOS DO TÍTULO
-        String[] pts = title.split(":|\\|");
-        if (4 > pts.length) return;
-        String shopId = pts[1].trim();
-        int targetSlot = Integer.parseInt(pts[3].trim());
+        int slot = event.getRawSlot();
+        if (slot < 0 || slot > 53) return;
 
-        // 2. CONTROLES GERAIS (RELOAD SGP)
-        if (clickedSlot == 53) {
-            p.closeInventory();
-            p.performCommand("shopgui reload");
-            return;
-        }
+        // Aceita apenas cliques que devem executar funções
+        ClickType click = event.getClick();
+        if (click != ClickType.LEFT && click != ClickType.RIGHT) return;
 
-        // 3. INTERRUPTORES DE MODO (SOMA/SUBTRAÇÃO)
-        if (clickedSlot == 26 || clickedSlot == 35 || clickedSlot == 44) {
-            ItemStack item = event.getCurrentItem();
-            if (null != item) {
-                Material current = item.getType();
-                Material next = (current == Material.WHITE_STAINED_GLASS_PANE) ? Material.BLACK_STAINED_GLASS_PANE : Material.WHITE_STAINED_GLASS_PANE;
-                String modeName = (next == Material.WHITE_STAINED_GLASS_PANE) ? "&a&lMODE: ADD (+)" : "&c&lMODE: SUBTRACT (-)";
-                event.getInventory().setItem(clickedSlot, GuiManager.createItem(next, modeName));
+        try {
+            // Extração flexível de dados
+            String dataOnly = cleanTitle.replace("Editing:", "").replace("Editando:", "").replace("Slot:", "").trim();
+            String[] pts = dataOnly.split("\\|");
+            
+            if (pts.length < 2) return;
+            
+            final String shopId = pts[0].trim();
+            final int targetSlot = Integer.parseInt(pts[1].trim());
+
+            // 1. INTERRUPTORES DE MODO (Vidros Brancos/Pretos)
+            if (slot == 26 || slot == 35 || slot == 44) {
+                handleToggle(event, slot, p);
+                p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.2f);
+                return;
             }
-            return;
-        }
 
-        // 4. CARREGAMENTO DO ARQUIVO DA LOJA
-        File shopFile = new File(new File(Bukkit.getPluginManager().getPlugin("ShopGUIPlus").getDataFolder(), "shops"), shopId + ".yml");
-        if (false == shopFile.exists()) return;
-        FileConfiguration shopConfig = YamlConfiguration.loadConfiguration(shopFile);
-        String root = shopConfig.contains(shopId + ".items") ? shopId + ".items" : "items";
-
-        String itemKey = null;
-        if (null != shopConfig.getConfigurationSection(root)) {
-            for (String k : shopConfig.getConfigurationSection(root).getKeys(false)) {
-                if (shopConfig.getInt(root + "." + k + ".slot") == targetSlot) {
-                    itemKey = k;
-                    break;
-                }
+            // 2. NAVEGAÇÃO E RECARREGAMENTO
+            if (slot == 3 || slot == 5 || slot == 52 || slot == 53) {
+                NavigationHandler.handle(p, shopId, targetSlot, slot);
+            } 
+            // 3. AJUSTES DE PREÇO
+            else if (slot >= 18 && slot <= 34) {
+                PriceAdjustmentHandler.handle(event, p, shopId, targetSlot, slot);
             }
-        }
-        if (null == itemKey) return;
-        String fullPath = root + "." + itemKey;
-        boolean changed = false;
+            // 4. AJUSTES DE QUANTIDADE
+            else if (slot >= 36 && slot <= 43) {
+                QuantityAdjustmentHandler.handle(event, p, shopId, targetSlot, slot);
+            }
 
-        // 5. LÓGICA INDEPENDENTE POR FILEIRA (EVITA BUG DE PREÇO)
-
-        // FILEIRA DE COMPRA (Slots 18 a 25)
-        if (clickedSlot >= 18 && 26 > clickedSlot) {
-            double amt = ShopGuiAddon.getInstance().getConfig().getDouble("gui.buy_adjustments." + (clickedSlot - 18) + ".amount");
-            double current = shopConfig.getDouble(fullPath + ".buyPrice");
-            
-            ItemStack toggle = event.getInventory().getItem(26);
-            boolean isSub = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
-            
-            BigDecimal currentBD = BigDecimal.valueOf(current);
-            BigDecimal amtBD = BigDecimal.valueOf(amt);
-            BigDecimal result = isSub ? currentBD.subtract(amtBD) : currentBD.add(amtBD);
-            
-            double newVal = result.setScale(2, RoundingMode.HALF_UP).doubleValue();
-            if (0.0 > newVal) newVal = 0.0;
-            
-            shopConfig.set(fullPath + ".buyPrice", newVal);
-            changed = true;
+        } catch (Exception e) {
+            // Silencia erros de parse para evitar spam no console
         }
+    }
 
-        // FILEIRA DE VENDA (Slots 27 a 34)
-        else if (clickedSlot >= 27 && 35 > clickedSlot) {
-            double amt = ShopGuiAddon.getInstance().getConfig().getDouble("gui.sell_adjustments." + (clickedSlot - 27) + ".amount");
-            double current = shopConfig.getDouble(fullPath + ".sellPrice");
-            
-            ItemStack toggle = event.getInventory().getItem(35);
-            boolean isSub = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
-            
-            BigDecimal currentBD = BigDecimal.valueOf(current);
-            BigDecimal amtBD = BigDecimal.valueOf(amt);
-            BigDecimal result = isSub ? currentBD.subtract(amtBD) : currentBD.add(amtBD);
-            
-            double newVal = result.setScale(2, RoundingMode.HALF_UP).doubleValue();
-            if (0.0 > newVal) newVal = 0.0;
-            
-            shopConfig.set(fullPath + ".sellPrice", newVal);
-            changed = true;
+    private void handleToggle(InventoryClickEvent event, int slot, Player p) {
+        ItemStack item = event.getCurrentItem();
+        if (item == null || item.getType() == Material.AIR) return;
+        
+        Material nextMat;
+        String nextName;
+        
+        if (item.getType() == Material.WHITE_STAINED_GLASS_PANE) {
+            nextMat = Material.BLACK_STAINED_GLASS_PANE;
+            nextName = "&c&lMODO: SUBTRAIR (-)";
+        } else {
+            nextMat = Material.WHITE_STAINED_GLASS_PANE;
+            nextName = "&a&lMODO: ADICIONAR (+)";
         }
-
-        // FILEIRA DE QUANTIDADE (Slots 36 a 43)
-        else if (clickedSlot >= 36 && 44 > clickedSlot) {
-            int[] amounts = {1, 2, 4, 8, 16, 32, 64, 100};
-            int amtAdjust = amounts[clickedSlot - 36];
-            int current = shopConfig.getInt(fullPath + ".item.quantity", 1);
-            
-            ItemStack toggle = event.getInventory().getItem(44);
-            boolean isSub = (null != toggle && toggle.getType() == Material.BLACK_STAINED_GLASS_PANE);
-            
-            int newVal = isSub ? (current - amtAdjust) : (current + amtAdjust);
-            if (1 > newVal) newVal = 1;
-            
-            shopConfig.set(fullPath + ".item.quantity", newVal);
-            changed = true;
-        }
-
-        // 6. SALVAMENTO E ATUALIZAÇÃO DO VISOR
-        if (changed) {
-            try {
-                shopConfig.save(shopFile);
-                GuiManager.updateVisor(event.getInventory(), shopConfig, root, itemKey, targetSlot);
-            } catch (IOException e) { e.printStackTrace(); }
-        }
+        
+        ItemStack newItem = GuiManager.createItemWithLore(
+            nextMat, 
+            nextName, 
+            Arrays.asList("&7Clique para alternar o modo.")
+        );
+        
+        event.getInventory().setItem(slot, newItem);
+        p.updateInventory(); // Força a atualização visual para o jogador
     }
 }

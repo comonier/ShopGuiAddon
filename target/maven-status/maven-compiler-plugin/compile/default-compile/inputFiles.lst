@@ -1,6 +1,12 @@
 C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\ChatUtils.java
-C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\CommandHandler.java
+C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\NavigationHandler.java
+C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\PriceCalculator.java
 C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\TabCompleter.java
 C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\GuiManager.java
+C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\ShopOperations.java
+C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\PriceAdjustmentHandler.java
 C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\EventListener.java
 C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\ShopGuiAddon.java
+C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\SgaCommand.java
+C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\ShopFileManager.java
+C:\.mine\.pl\ShopGuiAddon\src\main\java\com\comonier\shopguiaddon\QuantityAdjustmentHandler.java

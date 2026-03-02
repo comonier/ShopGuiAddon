@@ -16,6 +16,7 @@ en:
   link_success: "&aSuccess! Shop linked to slot %slot% using icon %mat%."
   # Help Menu
   help_header: "&m-------&b&l ShopGuiAddon Help &m-------"
+  help_list: "&b/sga list &8- &7List all available shop files."
   help_edit: "&b/sga edit [shop] [slot] &8- &7Open the price/quantity editor."
   help_itemadd: "&b/sga itemadd [shop] [slot] [buy] [sell] [amount] &8- &7Add item from hand."
   help_shopcreate: "&b/sga shopcreate [name] &8- &7Create a new shop file."
@@ -41,6 +42,7 @@ pt:
   link_success: "&aSucesso! Loja linkada no slot %slot% usando o ícone %mat%."
   # Menu de Ajuda
   help_header: "&m-------&b&l Ajuda ShopGuiAddon &m-------"
+  help_list: "&b/sga list &8- &7Lista todos os arquivos de loja."
   help_edit: "&b/sga edit [shop] [slot] &8- &7Abre o editor de preços e quantidade."
   help_itemadd: "&b/sga itemadd [shop] [slot] [compra] [venda] [quant] &8- &7Adiciona item da mão."
   help_shopcreate: "&b/sga shopcreate [nome] &8- &7Cria um novo arquivo de loja."

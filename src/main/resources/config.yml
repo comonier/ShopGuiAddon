@@ -1,35 +1,43 @@
+# Configuração Principal do ShopGuiAddon
 language: "pt"
 
 gui:
-  title: "Editing: %shop% | Slot: %slot%"
+  # Placeholders disponíveis: %shop% e %slot%
+  title: "&8Editando: &b%shop% &8| Slot: &b%slot%"
   size: 54
   
-  # Fileira 3 (Slots 18 a 25): COMPRA
-  # Removido sinais fixos para não confundir com o Interruptor de Modo
+  # Fileira 3 (Slots 18 a 25): AJUSTES DE PREÇO DE COMPRA
   buy_adjustments:
-    0: { material: "LIME_STAINED_GLASS_PANE", name: "&a0.10", amount: 0.1 }
-    1: { material: "LIME_DYE", name: "&a1.00", amount: 1.0 }
-    2: { material: "LIME_WOOL", name: "&a10.00", amount: 10.0 }
-    3: { material: "LIME_CONCRETE", name: "&a100.00", amount: 100.0 }
-    4: { material: "EMERALD", name: "&a1,000.00", amount: 1000.0 }
-    5: { material: "EMERALD_BLOCK", name: "&a10,000.00", amount: 10000.0 }
-    6: { material: "DIAMOND", name: "&a100,000.00", amount: 100000.0 }
-    7: { material: "NETHER_STAR", name: "&b&l1,000,000.00", amount: 1000000.0 }
+    0: { material: "LIME_STAINED_GLASS_PANE", name: "&a+ 0.10", amount: 0.1 }
+    1: { material: "LIME_DYE", name: "&a+ 1.00", amount: 1.0 }
+    2: { material: "LIME_WOOL", name: "&a+ 10.00", amount: 10.0 }
+    3: { material: "LIME_CONCRETE", name: "&a+ 100.00", amount: 100.0 }
+    4: { material: "EMERALD", name: "&a+ 1,000.00", amount: 1000.0 }
+    5: { material: "EMERALD_BLOCK", name: "&a+ 10,000.00", amount: 10000.0 }
+    6: { material: "DIAMOND", name: "&a+ 100,000.00", amount: 100000.0 }
+    7: { material: "NETHER_STAR", name: "&b&l+ 1,000,000.00", amount: 1000000.0 }
 
-  # Fileira 4 (Slots 27 a 34): VENDA
+  # Fileira 4 (Slots 27 a 34): AJUSTES DE PREÇO DE VENDA
   sell_adjustments:
-    0: { material: "RED_STAINED_GLASS_PANE", name: "&c0.10", amount: 0.1 }
-    1: { material: "RED_DYE", name: "&c1.00", amount: 1.0 }
-    2: { material: "RED_WOOL", name: "&c10.00", amount: 10.0 }
-    3: { material: "RED_CONCRETE", name: "&c100.00", amount: 100.0 }
-    4: { material: "REDSTONE", name: "&c1,000.00", amount: 1000.0 }
-    5: { material: "REDSTONE_BLOCK", name: "&c10,000.00", amount: 10000.0 }
-    6: { material: "TNT", name: "&c100,000.00", amount: 100000.0 }
-    7: { material: "NETHERITE_BLOCK", name: "&4&l1,000,000.00", amount: 1000000.0 }
+    0: { material: "RED_STAINED_GLASS_PANE", name: "&c+ 0.10", amount: 0.1 }
+    1: { material: "RED_DYE", name: "&c+ 1.00", amount: 1.0 }
+    2: { material: "RED_WOOL", name: "&c+ 10.00", amount: 10.0 }
+    3: { material: "RED_CONCRETE", name: "&c+ 100.00", amount: 100.0 }
+    4: { material: "REDSTONE", name: "&c+ 1,000.00", amount: 1000.0 }
+    5: { material: "REDSTONE_BLOCK", name: "&c+ 10,000.00", amount: 10000.0 }
+    6: { material: "TNT", name: "&c+ 100,000.00", amount: 100000.0 }
+    7: { material: "NETHERITE_BLOCK", name: "&4&l+ 1,000,000.00", amount: 1000000.0 }
 
-  # Fileira 6 (Slots 45 a 53): CONTROLES
+  # Fileira 6 (Slots 52 e 53): CONTROLES GERAIS
   controls:
-    prev_slot: { material: "ARROW", name: "&eSlot Anterior" }
-    next_slot: { material: "ARROW", name: "&ePróximo Slot" }
-    reload_sga: { material: "CLOCK", name: "&bRecarregar ShopGuiAddon" }
-    reload_sgp: { material: "BLAZE_POWDER", name: "&6Recarregar ShopGUI+" }
+    reload_sga: 
+      material: "CLOCK"
+      name: "&bRecarregar ShopGuiAddon"
+    reload_sgp: 
+      material: "BLAZE_POWDER"
+      name: "&6Recarregar ShopGUI+"
+
+# Configurações de exibição do comando /sga list
+list_settings:
+  header: "&b&lLojas Disponíveis em /shops:"
+  prefix: " &7- &f"

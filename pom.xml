@@ -6,7 +6,7 @@
 
     <groupId>com.comonier</groupId>
     <artifactId>ShopGuiAddon</artifactId>
-    <version>1.3</version>
+    <version>1.4</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -15,37 +15,64 @@
     </properties>
 
     <repositories>
+        <!-- Spigotmc -->
         <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org</url>
         </repository>
+        <!-- JitPack (Usado como fallback principal para ShopGUI+) -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <!-- Brider/Brcdev (Repositório Oficial) -->
+        <repository>
+            <id>brcdev-repo</id>
+            <url>https://repo.brcdev.net</url>
+        </repository>
+        <!-- Minecraft Libraries -->
+        <repository>
+            <id>minecraft-repo</id>
+            <url>https://libraries.minecraft.net</url>
+        </repository>
     </repositories>
 
     <dependencies>
+        <!-- Spigot API -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        
+        <!-- ShopGUI+ API via JitPack (Mais estável para build) -->
         <dependency>
             <groupId>com.github.brcdev-minecraft</groupId>
             <artifactId>shopgui-api</artifactId>
-            <version>3.2.0</version>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- Mojang AuthLib -->
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>authlib</artifactId>
+            <version>6.0.54</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
 
     <build>
+        <finalName>ShopGuiAddon-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
+                <configuration>
+                    <release>21</release>
+                </configuration>
             </plugin>
         </plugins>
     </build>

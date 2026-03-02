@@ -1,6 +1,12 @@
-com\comonier\shopguiaddon\GuiManager.class
+com\comonier\shopguiaddon\PriceCalculator.class
 com\comonier\shopguiaddon\TabCompleter.class
-com\comonier\shopguiaddon\CommandHandler.class
+com\comonier\shopguiaddon\QuantityAdjustmentHandler.class
 com\comonier\shopguiaddon\ShopGuiAddon.class
+com\comonier\shopguiaddon\NavigationHandler.class
+com\comonier\shopguiaddon\ShopOperations.class
+com\comonier\shopguiaddon\GuiManager.class
+com\comonier\shopguiaddon\SgaCommand.class
 com\comonier\shopguiaddon\EventListener.class
+com\comonier\shopguiaddon\PriceAdjustmentHandler.class
 com\comonier\shopguiaddon\ChatUtils.class
+com\comonier\shopguiaddon\ShopFileManager.class
