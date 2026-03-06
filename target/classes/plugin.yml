@@ -1,24 +1,20 @@
 name: ShopGuiAddon
-version: '1.4'
+version: '1.5'
 main: com.comonier.shopguiaddon.ShopGuiAddon
 api-version: '1.21'
 author: Comonier
 description: Advanced ShopGUI+ addon with visual editing, skin support, quantity management, and menu management.
 load: POSTWORLD
-
-# O plugin só inicia após o ShopGUIPlus ser detectado
 depend:
   - ShopGUIPlus
-
 commands:
   sga:
-    description: Comando principal do ShopGuiAddon.
+    description: Main command for ShopGuiAddon.
     aliases: [shopguiaddon, sgaedit]
-    usage: /sga [help|edit|itemadd|itemremove|reload|shopcreate|shopremove|link|replace|unlink|menu|item]
+    usage: /sga [help|edit|itemadd|itemremove|reload|shopcreate|shopremove|link|replace|unlink]
     permission: shopguiaddon.admin
-    permission-message: "&cVocê não tem permissão para usar este comando!"
-
+    permission-message: "&8[&bSGA&8] &cYou do not have permission to use this command!"
 permissions:
   shopguiaddon.admin:
-    description: Permite acesso total às funções de edição e gerenciamento do addon.
+    description: Allows full access to the addon's editing and management functions.
     default: op

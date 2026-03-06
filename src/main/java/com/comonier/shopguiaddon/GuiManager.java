@@ -1,5 +1,4 @@
 package com.comonier.shopguiaddon;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,105 +14,67 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-
 public class GuiManager {
-
     private static final String SKIN_PREV = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2EyYzEyY2IyMjkxODM4NGUwYTgxYzgyYTFlZDk5YWViZGNlOTRiMmVjMjc1NDgwMDk3MjMxOWI1NzkwMGFmYiJ9fX0=";
     private static final String SKIN_NEXT = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjkxYWM0MzJhYTQwZDdlN2E2ODdhYTg1MDQxZGU2MzY3MTJkNGYwMjI2MzJkZDUzNTZjODgwNTIxYWYyNzIzYSJ9fX0=";
-
-    public static void openEditor(Player player, String shopName, int slotId) {
-        FileConfiguration config = ShopGuiAddon.getInstance().getConfig();
-        String titleFormat = config.getString("gui.title", "&8Editing: &b%shop% &8| Slot: &b%slot%");
-        // IMPORTANTE: O título deve bater exatamente com a verificação do EventListener
-        String title = ChatUtils.color(titleFormat.replace("%shop%", shopName).replace("%slot%", String.valueOf(slotId)));
-        
+    public static void openEditor(Player player, String shopName, int slotId, int page) {
+        String title = ChatUtils.getMessage("gui_title", "%shop%", shopName, "%slot%", slotId, "%page%", page);
         Inventory gui = Bukkit.createInventory(null, 54, title);
-
-        // Preenchimento total para evitar slots vazios (AIR)
-        ItemStack fillerDark = createItem(Material.BLACK_STAINED_GLASS_PANE, " ");
-        ItemStack fillerGray = createItem(Material.GRAY_STAINED_GLASS_PANE, " ");
-        
-        for (int i = 0; i < 54; i++) {
-            if (i < 9 || i > 44 || i % 9 == 0 || i % 9 == 8) gui.setItem(i, fillerDark);
-            else gui.setItem(i, fillerGray);
+        ItemStack fD = createItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        ItemStack fG = createItem(Material.GRAY_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i >= 0 && i <= 53; i++) {
+            if (i >= 0 && i <= 8 || i >= 45 && i <= 53 || i % 9 == 0 || i % 9 == 8) gui.setItem(i, fD);
+            else gui.setItem(i, fG);
         }
-
-        // Navegação e Visor
-        gui.setItem(3, createSkull(parseSkin(SKIN_PREV), "&e« Slot Anterior"));
-        gui.setItem(5, createSkull(parseSkin(SKIN_NEXT), "&ePróximo Slot »"));
-        gui.setItem(13, createItem(Material.CYAN_STAINED_GLASS_PANE, "&f↑ Item em Edição ↑"));
-
-        // Interruptores de Modo
-        String modeMsg = "&a&lMODO: ADICIONAR (+)";
-        List<String> modeLore = Collections.singletonList("&7Clique para alternar para &cSUBTRAIR (-)");
+        gui.setItem(3, createSkull(parseSkin(SKIN_PREV), ChatUtils.getMessage("gui_prev")));
+        gui.setItem(5, createSkull(parseSkin(SKIN_NEXT), ChatUtils.getMessage("gui_next")));
+        gui.setItem(13, createItem(Material.CYAN_STAINED_GLASS_PANE, ChatUtils.getMessage("gui_visor_up")));
+        String modeMsg = ChatUtils.getMessage("gui_mode_add");
+        List<String> modeLore = Collections.singletonList(ChatUtils.getMessage("gui_mode_lore"));
         gui.setItem(26, createItemWithLore(Material.WHITE_STAINED_GLASS_PANE, modeMsg, modeLore));
         gui.setItem(35, createItemWithLore(Material.WHITE_STAINED_GLASS_PANE, modeMsg, modeLore));
         gui.setItem(44, createItemWithLore(Material.WHITE_STAINED_GLASS_PANE, modeMsg, modeLore));
-
-        // Carrega Item do ShopGUI+
         File f = ShopOperations.getShopFile(shopName);
         if (f.exists()) {
-            FileConfiguration shopCfg = YamlConfiguration.loadConfiguration(f);
-            String root = shopCfg.contains(shopName + ".items") ? shopName + ".items" : "items";
-            String itemKey = findItemKey(shopCfg, root, slotId);
-            updateVisor(gui, shopCfg, root, itemKey, slotId);
+            FileConfiguration sC = YamlConfiguration.loadConfiguration(f);
+            String r = sC.contains(shopName + ".items") ? shopName + ".items" : "items";
+            String k = findItemKey(sC, r, slotId, page);
+            updateVisor(gui, sC, r, k, slotId);
         }
-
-        // Botões de Ajuste
-        for (int i = 0; i < 8; i++) {
-            gui.setItem(18 + i, createFromConfig(config, "gui.buy_adjustments." + i));
-            gui.setItem(27 + i, createFromConfig(config, "gui.sell_adjustments." + i));
-            
+        FileConfiguration c = ShopGuiAddon.getInstance().getConfig();
+        for (int i = 0; i >= 0 && i <= 7; i++) {
+            gui.setItem(18 + i, createFromConfig(c, "gui.buy_adjustments." + i));
+            gui.setItem(27 + i, createFromConfig(c, "gui.sell_adjustments." + i));
             int[] amts = {1, 2, 4, 8, 16, 32, 64, 100};
-            gui.setItem(36 + i, createItemWithLore(Material.CHEST, "&eAjuste: &f±" + amts[i], 
-                Collections.singletonList("&7Altera a quantidade do item.")));
+            gui.setItem(36 + i, createItemWithLore(Material.CHEST, "&e±" + amts[i], Collections.singletonList(ChatUtils.getMessage("gui_adj_lore"))));
         }
-
-        gui.setItem(49, createItem(Material.BARRIER, "&cFechar Editor"));
-        gui.setItem(52, createFromConfig(config, "gui.controls.reload_sga"));
-        gui.setItem(53, createFromConfig(config, "gui.controls.reload_sgp"));
-
+        gui.setItem(49, createItem(Material.BARRIER, ChatUtils.getMessage("gui_close")));
+        gui.setItem(52, createFromConfig(c, "gui.controls.reload_sga"));
+        gui.setItem(53, createFromConfig(c, "gui.controls.reload_sgp"));
         player.openInventory(gui);
     }
-
     public static void updateVisor(Inventory gui, FileConfiguration cfg, String root, String key, int slotId) {
         ItemStack visor;
         if (key != null) {
-            String path = root + "." + key;
-            String matName = cfg.getString(path + ".item.material", "BARRIER");
-            Material m = Material.matchMaterial(matName);
-            String skin = cfg.getString(path + ".item.skin");
-            
-            visor = (m == Material.PLAYER_HEAD && skin != null) ? 
-                    createSkull(parseSkin(skin), "&b&lItem: &f" + matName.toLowerCase()) : 
-                    new ItemStack(m != null ? m : Material.BARRIER);
-            
-            ItemMeta meta = visor.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName(ChatUtils.color("&b&lEditando: &f" + matName.toLowerCase()));
-                meta.setLore(Arrays.asList(
-                    " ",
-                    ChatUtils.color("&fPreço Compra: &a$" + String.format("%.2f", cfg.getDouble(path + ".buyPrice"))),
-                    ChatUtils.color("&fPreço Venda: &c$" + String.format("%.2f", cfg.getDouble(path + ".sellPrice"))),
-                    ChatUtils.color("&fQtd p/ Venda: &e" + cfg.getInt(path + ".item.quantity", 1)),
-                    " ",
-                    ChatUtils.color("&7Slot original: &7" + slotId)
-                ));
-                visor.setItemMeta(meta);
+            String p = root + "." + key;
+            String mN = cfg.getString(p + ".item.material", "BARRIER");
+            Material m = Material.matchMaterial(mN);
+            String s = cfg.getString(p + ".item.skin");
+            visor = (m == Material.PLAYER_HEAD && s != null) ? createSkull(parseSkin(s), ChatUtils.getMessage("gui_visor_edit", "%mat%", mN.toLowerCase())) : new ItemStack(m != null ? m : Material.BARRIER);
+            ItemMeta mt = visor.getItemMeta();
+            if (mt != null) {
+                mt.setDisplayName(ChatUtils.getMessage("gui_visor_edit", "%mat%", mN.toLowerCase()));
+                mt.setLore(Arrays.asList(" ", ChatUtils.getMessage("gui_visor_buy", "%price%", String.format("%.2f", cfg.getDouble(p + ".buyPrice"))), ChatUtils.getMessage("gui_visor_sell", "%price%", String.format("%.2f", cfg.getDouble(p + ".sellPrice"))), ChatUtils.getMessage("gui_visor_qty", "%qty%", cfg.getInt(p + ".item.quantity", 1)), " ", ChatUtils.getMessage("gui_visor_footer", "%slot%", slotId, "%page%", cfg.getInt(p + ".page", 1))));
+                visor.setItemMeta(mt);
             }
-        } else {
-            visor = createItem(Material.BARRIER, "&cSlot Vazio no ShopGUI+");
-        }
+        } else { visor = createItem(Material.BARRIER, ChatUtils.getMessage("gui_visor_empty")); }
         gui.setItem(4, visor);
     }
-
-    // MÉTODO QUE FALTAVA PARA COMPILAR O SHOPOPERATIONS
     public static String generateBase64Skin(String url) {
         if (url == null || url.isEmpty()) return "";
         String json = "{\"textures\":{\"SKIN\":{\"url\":\"" + url + "\"}}}";
         return Base64.getEncoder().encodeToString(json.getBytes());
     }
-
     public static ItemStack createSkull(String url, String name) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         if (url == null || url.isEmpty()) return head;
@@ -125,36 +86,33 @@ public class GuiManager {
         head.setItemMeta(meta);
         return head;
     }
-
     public static String parseSkin(String b64) {
         if (b64 == null || b64.isEmpty()) return "";
         try {
             String d = new String(Base64.getDecoder().decode(b64));
             int s = d.indexOf("\"url\":\"") + 7;
             int e = d.indexOf("\"", s);
-            return (s > 6 && e > s) ? d.substring(s, e) : "";
+            return (s >= 7 && e >= s) ? d.substring(s, e) : "";
         } catch (Exception e) { return ""; }
     }
-
-    private static String findItemKey(FileConfiguration cfg, String root, int slot) {
+    private static String findItemKey(FileConfiguration cfg, String root, int slot, int page) {
         ConfigurationSection sec = cfg.getConfigurationSection(root);
         if (sec == null) return null;
-        for (String k : sec.getKeys(false)) if (cfg.getInt(root + "." + k + ".slot") == slot) return k;
+        for (String k : sec.getKeys(false)) {
+            if (cfg.getInt(root + "." + k + ".slot") == slot && cfg.getInt(root + "." + k + ".page", 1) == page) return k;
+        }
         return null;
     }
-
     private static ItemStack createFromConfig(FileConfiguration cfg, String path) {
         Material m = Material.matchMaterial(cfg.getString(path + ".material", "STONE"));
-        return createItem(m != null ? m : Material.BARRIER, cfg.getString(path + ".name", "&cErro Config"));
+        return createItem(m != null ? m : Material.BARRIER, cfg.getString(path + ".name", "&cError"));
     }
-
     public static ItemStack createItem(Material m, String n) {
         ItemStack i = new ItemStack(m != null ? m : Material.BARRIER);
         ItemMeta mt = i.getItemMeta();
         if (mt != null) { mt.setDisplayName(ChatUtils.color(n)); i.setItemMeta(mt); }
         return i;
     }
-
     public static ItemStack createItemWithLore(Material m, String n, List<String> l) {
         ItemStack i = createItem(m, n);
         ItemMeta mt = i.getItemMeta();

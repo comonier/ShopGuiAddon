@@ -1,12 +1,7 @@
-# Configuração Principal do ShopGuiAddon
-language: "pt"
-
+language: "en"
 gui:
-  # Placeholders disponíveis: %shop% e %slot%
-  title: "&8Editando: &b%shop% &8| Slot: &b%slot%"
+  title: "&8Editing: &b%shop% &8| Slot: &b%slot% &8| P: &b%page%"
   size: 54
-  
-  # Fileira 3 (Slots 18 a 25): AJUSTES DE PREÇO DE COMPRA
   buy_adjustments:
     0: { material: "LIME_STAINED_GLASS_PANE", name: "&a+ 0.10", amount: 0.1 }
     1: { material: "LIME_DYE", name: "&a+ 1.00", amount: 1.0 }
@@ -16,8 +11,6 @@ gui:
     5: { material: "EMERALD_BLOCK", name: "&a+ 10,000.00", amount: 10000.0 }
     6: { material: "DIAMOND", name: "&a+ 100,000.00", amount: 100000.0 }
     7: { material: "NETHER_STAR", name: "&b&l+ 1,000,000.00", amount: 1000000.0 }
-
-  # Fileira 4 (Slots 27 a 34): AJUSTES DE PREÇO DE VENDA
   sell_adjustments:
     0: { material: "RED_STAINED_GLASS_PANE", name: "&c+ 0.10", amount: 0.1 }
     1: { material: "RED_DYE", name: "&c+ 1.00", amount: 1.0 }
@@ -27,17 +20,13 @@ gui:
     5: { material: "REDSTONE_BLOCK", name: "&c+ 10,000.00", amount: 10000.0 }
     6: { material: "TNT", name: "&c+ 100,000.00", amount: 100000.0 }
     7: { material: "NETHERITE_BLOCK", name: "&4&l+ 1,000,000.00", amount: 1000000.0 }
-
-  # Fileira 6 (Slots 52 e 53): CONTROLES GERAIS
   controls:
     reload_sga: 
       material: "CLOCK"
-      name: "&bRecarregar ShopGuiAddon"
+      name: "&bReload ShopGuiAddon"
     reload_sgp: 
       material: "BLAZE_POWDER"
-      name: "&6Recarregar ShopGUI+"
-
-# Configurações de exibição do comando /sga list
+      name: "&6Reload ShopGUI+"
 list_settings:
-  header: "&b&lLojas Disponíveis em /shops:"
+  header: "&b&lAvailable Shops in /shops:"
   prefix: " &7- &f"
