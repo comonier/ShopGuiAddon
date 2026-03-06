@@ -1,4 +1,4 @@
-# 🛒 ShopGuiAddon 1.4 - The "Universal Quantity" Update
+# 🛒 ShopGuiAddon 1.5 - Fixed Issues on Pathline of /sga menu command.
 
 **ShopGuiAddon** is a professional expansion for [ShopGUI+](https://www.spigotmc.org). This version introduces full **Quantity (Amount)** management and **BigDecimal** financial precision, ensuring a 100% bug-free experience for both Java and Bedrock (Geyser) administrators.
 
